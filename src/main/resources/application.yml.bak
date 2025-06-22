@@ -1,0 +1,377 @@
+# =============================================================================
+# Diagnyx Notification Service Configuration
+# =============================================================================
+
+server:
+  port: 8081
+  servlet:
+    context-path: /api/v1/notifications
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  http2:
+    enabled: true
+
+spring:
+  application:
+    name: notification-service
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
+  
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:diagnyx_notification_db}
+    username: ${DB_USERNAME:diagnyx_user}
+    password: ${DB_PASSWORD:secure_password_123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: NotificationServiceCP
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.SnakeCasePhysicalNamingStrategy
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        connection:
+          provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+    show-sql: false
+    open-in-view: false
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    locations: classpath:db/migration
+    schemas: notification_schema,template_schema,delivery_schema
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 2
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 8
+          min-idle: 2
+          max-wait: 5000ms
+
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:diagnyx}
+    password: ${RABBITMQ_PASSWORD:secure_password}
+    virtual-host: /diagnyx
+    connection-timeout: 10000ms
+    listener:
+      simple:
+        acknowledge-mode: auto
+        concurrency: 5
+        max-concurrency: 10
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2
+          max-interval: 10000ms
+
+  # Mail Configuration
+  mail:
+    default-encoding: UTF-8
+    host: ${MAIL_HOST:smtp.sendgrid.net}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:apikey}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: "*"
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+
+  # Security Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SUPABASE_URL:https://your-project.supabase.co}/auth/v1
+          jwk-set-uri: ${SUPABASE_URL:https://your-project.supabase.co}/auth/v1/certs
+
+  # Actuator Configuration
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus,loggers
+        base-path: /actuator
+    endpoint:
+      health:
+        show-details: when-authorized
+        probes:
+          enabled: true
+    health:
+      redis:
+        enabled: true
+      rabbitmq:
+        enabled: true
+      mail:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+    tracing:
+      sampling:
+        probability: 0.1
+
+  # Jackson Configuration
+  jackson:
+    time-zone: UTC
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
+    serialization:
+      write-dates-as-timestamps: false
+      write-durations-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+      adjust-dates-to-context-time-zone: false
+
+  # Task Execution Configuration
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 50
+        queue-capacity: 100
+        keep-alive: 60s
+      thread-name-prefix: notification-task-
+    scheduling:
+      pool:
+        size: 5
+      thread-name-prefix: notification-scheduling-
+
+# =============================================================================
+# Notification Service Specific Configuration
+# =============================================================================
+
+# Notification Providers Configuration
+notification:
+  providers:
+    email:
+      sendgrid:
+        enabled: ${SENDGRID_ENABLED:true}
+        api-key: ${SENDGRID_API_KEY:}
+        from-email: ${SENDGRID_FROM_EMAIL:noreply@diagnyx.com}
+        from-name: ${SENDGRID_FROM_NAME:Diagnyx}
+        template-id-mapping:
+          welcome: d-xxx
+          password-reset: d-yyy
+          alert-notification: d-zzz
+      
+      mailgun:
+        enabled: ${MAILGUN_ENABLED:false}
+        api-key: ${MAILGUN_API_KEY:}
+        domain: ${MAILGUN_DOMAIN:mg.diagnyx.com}
+        from-email: ${MAILGUN_FROM_EMAIL:noreply@diagnyx.com}
+        from-name: ${MAILGUN_FROM_NAME:Diagnyx}
+      
+      ses:
+        enabled: ${SES_ENABLED:false}
+        region: ${SES_REGION:us-east-1}
+        access-key: ${SES_ACCESS_KEY:}
+        secret-key: ${SES_SECRET_KEY:}
+        from-email: ${SES_FROM_EMAIL:noreply@diagnyx.com}
+        from-name: ${SES_FROM_NAME:Diagnyx}
+    
+    sms:
+      twilio:
+        enabled: ${TWILIO_ENABLED:true}
+        account-sid: ${TWILIO_ACCOUNT_SID:}
+        auth-token: ${TWILIO_AUTH_TOKEN:}
+        from-number: ${TWILIO_FROM_NUMBER:}
+    
+    push:
+      firebase:
+        enabled: ${FIREBASE_ENABLED:true}
+        service-account-key: ${FIREBASE_SERVICE_ACCOUNT_KEY:}
+        project-id: ${FIREBASE_PROJECT_ID:}
+    
+    webhook:
+      enabled: ${WEBHOOK_ENABLED:true}
+      timeout: 30s
+      max-retries: 3
+      retry-delay: 5s
+    
+    slack:
+      enabled: ${SLACK_ENABLED:true}
+      bot-token: ${SLACK_BOT_TOKEN:}
+      webhook-url: ${SLACK_WEBHOOK_URL:}
+
+  # Processing Configuration
+  processing:
+    batch-size: 100
+    batch-timeout: 5s
+    max-retries: 3
+    retry-delay: 30s
+    retry-multiplier: 2
+    max-retry-delay: 300s
+    dead-letter-queue: notification.dlq
+    
+  # Rate Limiting
+  rate-limiting:
+    enabled: true
+    email:
+      per-minute: 1000
+      per-hour: 10000
+      per-day: 50000
+    sms:
+      per-minute: 100
+      per-hour: 1000
+      per-day: 5000
+    push:
+      per-minute: 5000
+      per-hour: 50000
+      per-day: 200000
+  
+  # Template Configuration
+  templates:
+    cache-enabled: true
+    cache-ttl: 3600s
+    engines:
+      thymeleaf:
+        enabled: true
+        cache: true
+      freemarker:
+        enabled: true
+        cache: true
+      handlebars:
+        enabled: true
+        cache: true
+  
+  # Analytics Configuration
+  analytics:
+    enabled: true
+    batch-size: 500
+    flush-interval: 60s
+    retention-days: 90
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+
+logging:
+  level:
+    com.diagnyx: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.mail: DEBUG
+    com.sendgrid: DEBUG
+    com.twilio: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/notification-service.log
+    max-size: 100MB
+    max-history: 30
+
+# =============================================================================
+# Environment-specific Configurations
+# =============================================================================
+
+---
+spring:
+  config:
+    activate:
+      on-profile: development
+
+logging:
+  level:
+    com.diagnyx: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.mail: DEBUG
+
+notification:
+  processing:
+    batch-size: 10
+  analytics:
+    batch-size: 50
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    com.diagnyx: INFO
+    org.hibernate.SQL: WARN
+
+notification:
+  processing:
+    batch-size: 500
+  analytics:
+    batch-size: 1000
+  rate-limiting:
+    email:
+      per-minute: 2000
+      per-hour: 20000
+      per-day: 100000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/diagnyx_notification_db
+  data:
+    redis:
+      host: redis
+  rabbitmq:
+    host: rabbitmq
+
+logging:
+  level:
+    com.diagnyx: INFO 
