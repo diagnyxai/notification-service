@@ -1,10 +1,18 @@
-# Compiled class files
+# Compiled class file
 *.class
 
-# Log files
+# Log file
 *.log
+logs/
+log/
 
-# Package Files
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
 *.jar
 *.war
 *.nar
@@ -12,6 +20,10 @@
 *.zip
 *.tar.gz
 *.rar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
 
 # Maven
 target/
@@ -25,20 +37,91 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# IDE
+# IDE files
 .idea/
 *.iws
 *.iml
 *.ipr
 .vscode/
+*.swp
+*.swo
+*~
 
-# OS
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# Spring Boot
+*.pid
+spring-boot-*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Application logs
+application*.log
+
+# SSL certificates (except development ones)
+*.p12
+*.jks
+*.keystore
+!keystore.p12
+
+# Test reports
+test-output/
+test-results/
+
+# Coverage reports
+jacoco.exec
+*.exec
+
+# OWASP Dependency Check
+dependency-check-report.*
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Application specific
-logs/
-application-*.yml
-application-*.properties
-!application.yml
-!application.properties
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Security scan results
+*.sarif
+trivy-results.*
+
+# Local development
+local.properties
+override.properties
+
+# Kubernetes
+*.yaml.bak
+kustomization.yaml.tmp

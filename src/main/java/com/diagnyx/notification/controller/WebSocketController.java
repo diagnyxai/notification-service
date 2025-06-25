@@ -1,5 +1,7 @@
 package com.diagnyx.notification.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -11,20 +13,24 @@ import com.diagnyx.notification.service.RealTimeService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Map;
 
 @Controller
 @CrossOrigin
-@RequiredArgsConstructor
-@Slf4j
 public class WebSocketController {
 
+    private static final Logger log = LoggerFactory.getLogger(WebSocketController.class);
+    
     private final SimpMessagingTemplate messagingTemplate;
     private final RealTimeService realTimeService;
     private final ObjectMapper objectMapper;
+    
+    @Autowired
+    public WebSocketController(SimpMessagingTemplate messagingTemplate, RealTimeService realTimeService, ObjectMapper objectMapper) {
+        this.messagingTemplate = messagingTemplate;
+        this.realTimeService = realTimeService;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Subscribe to real-time updates for a specific channel

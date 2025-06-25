@@ -1,8 +1,9 @@
 package com.diagnyx.notification.controller;
 
 import com.diagnyx.notification.service.RealTimeService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,11 +12,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/realtime")
-@RequiredArgsConstructor
-@Slf4j
 public class RealTimeController {
 
+    private static final Logger log = LoggerFactory.getLogger(RealTimeController.class);
+    
     private final RealTimeService realTimeService;
+    
+    @Autowired
+    public RealTimeController(RealTimeService realTimeService) {
+        this.realTimeService = realTimeService;
+    }
 
     /**
      * Get WebSocket connection details

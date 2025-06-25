@@ -1,0 +1,19 @@
+# Standardized requirements for notification service
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+httpx==0.27.0
+pymysql==1.1.0
+requests==2.32.3
+python-dateutil==2.9.0
+
+# Email functionality
+aiosmtplib==3.0.1
+jinja2==3.1.6
+email-validator==2.2.0
+
+# Security and authentication
+python-jose[cryptography]==3.3.0
+
+# Python version constraint
+# python_requires>=3.11,<3.14
